@@ -34,6 +34,15 @@
       margin: 0;
     }
 
+    .container img {
+      max-width: 100%;
+      max-height: 40vh;
+      object-fit: contain;
+      margin-bottom: 25px;
+      display: none;
+      border-radius: 12px;
+    }
+
     p {
       font-size: 2rem;
       margin: 0;
@@ -123,9 +132,11 @@
   </div>
 
   <div class="container">
+    <img id="image" />
     <h1 id="title"></h1>
     <p id="message"></p>
   </div>
+
 
   <div class="progress" id="progress"></div>
 
@@ -161,6 +172,7 @@
     const titleEl = document.getElementById("title");
     const messageEl = document.getElementById("message");
     const progressEl = document.getElementById("progress");
+    const imageEl = document.getElementById("image");
 
     function randomColors() {
       return COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -175,26 +187,56 @@
       return Array.isArray(msg) ? msg : [msg];
     }
 
+    function normalizeMessage(msg) {
+      if (Array.isArray(msg)) return msg;
+      if (typeof msg === "string") return [{ text: msg }];
+      if (typeof msg === "object") return [msg];
+      return [];
+    }
+
     function render() {
-      const item = getCurrentMessage();
-      const cards = getCards();
+      const item = DATA.messages[index];
+      const cards = normalizeMessage(item.message);
+
+      // Reset
+      imageEl.style.display = "none";
+      titleEl.style.display = "none";
+      messageEl.style.display = "none";
 
       document.body.style.backgroundColor = currentColors[0];
       titleEl.style.color = currentColors[1];
       messageEl.style.color = currentColors[1];
 
       if (step === "title") {
-        titleEl.textContent = item.title;
-        titleEl.style.display = "block";
-        messageEl.style.display = "none";
+        if (item.titleImage) {
+          imageEl.src = item.titleImage; // 👈 lien direct
+          imageEl.style.display = "block";
+        }
+
+        if (item.title) {
+          titleEl.textContent = item.title;
+          titleEl.style.display = "block";
+        }
       } else {
-        messageEl.textContent = cards[cardIndex];
-        messageEl.style.display = "block";
-        titleEl.style.display = "none";
+        const card = cards[cardIndex] || {};
+
+        const img = card.image || item.messageImage;
+        const text = card.text || card;
+
+        if (img) {
+          imageEl.src = img; // 👈 lien direct
+          imageEl.style.display = "block";
+        }
+
+        if (text) {
+          messageEl.textContent = text;
+          messageEl.style.display = "block";
+        }
       }
 
       renderProgress();
     }
+
 
     function renderProgress() {
       progressEl.innerHTML = "";
